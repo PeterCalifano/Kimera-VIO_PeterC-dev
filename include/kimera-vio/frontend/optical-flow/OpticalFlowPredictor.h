@@ -22,6 +22,9 @@
 #include "kimera-vio/utils/Macros.h"
 #include "kimera-vio/utils/UtilsOpenCV.h"
 
+#include <opencv2/viz/types.hpp>
+#include <opencv2/viz.hpp>
+
 namespace VIO {
 
 class OpticalFlowPredictor {

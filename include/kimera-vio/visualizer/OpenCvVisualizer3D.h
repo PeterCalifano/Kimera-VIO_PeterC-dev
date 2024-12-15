@@ -27,6 +27,7 @@
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 
 #include <opencv2/opencv.hpp>
+#include <opencv2/viz.hpp>
 #include <opencv2/viz/types.hpp>
 
 #include "kimera-vio/backend/VioBackend-definitions.h"
