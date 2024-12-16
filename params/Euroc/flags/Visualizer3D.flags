@@ -2,8 +2,11 @@
 # Visualizer 3D parameters.
 --mesh_shading=1
 --mesh_representation=1
---set_mesh_lighting=true
+--set_mesh_lighting=false
 --set_mesh_ambient=true
 --log_mesh=true
---log_accumulated_mesh=false
---displayed_trajectory_length=1
+--log_accumulated_mesh=true
+--displayed_trajectory_length=-1
+--visualize_convex_hull=true
+--visualize_semantic_mesh=true
+

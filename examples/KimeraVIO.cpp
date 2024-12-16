@@ -20,6 +20,7 @@
 #include <future>
 #include <memory>
 #include <utility>
+#include <thread>
 
 #include "kimera-vio/dataprovider/EurocDataProvider.h"
 #include "kimera-vio/dataprovider/KittiDataProvider.h"
@@ -40,7 +41,8 @@ DEFINE_string(
     "../params/Euroc",
     "Path to the folder containing the yaml files with the VIO parameters.");
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
   // Initialize Google's flags library.
   google::ParseCommandLineFlags(&argc, &argv, true);
   // Initialize Google's logging library.
@@ -51,47 +53,66 @@ int main(int argc, char* argv[]) {
 
   // Build dataset parser.
   VIO::DataProviderInterface::Ptr dataset_parser = nullptr;
-  switch (FLAGS_dataset_type) {
-    case 0: {
-      switch (vio_params.frontend_type_) {
-        case VIO::FrontendType::kMonoImu: {
-          dataset_parser =
-              std::make_unique<VIO::MonoEurocDataProvider>(vio_params);
-        } break;
-        case VIO::FrontendType::kStereoImu: {
-          dataset_parser = std::make_unique<VIO::EurocDataProvider>(vio_params);
-        } break;
-        default: {
-          LOG(FATAL) << "Unrecognized Frontend type: "
-                     << VIO::to_underlying(vio_params.frontend_type_)
-                     << ". 0: Mono, 1: Stereo.";
-        }
-      }
-    } break;
-    case 1: {
-      dataset_parser = std::make_unique<VIO::KittiDataProvider>();
-    } break;
-    default: {
-      LOG(FATAL) << "Unrecognized dataset type: " << FLAGS_dataset_type << "."
-                 << " 0: EuRoC, 1: Kitti.";
+  switch (FLAGS_dataset_type)
+  {
+  case 0:
+  {
+    switch (vio_params.frontend_type_)
+    {
+    case VIO::FrontendType::kMonoImu:
+    {
+      dataset_parser =
+          std::make_unique<VIO::MonoEurocDataProvider>(vio_params);
     }
+    break;
+    case VIO::FrontendType::kStereoImu:
+    {
+      dataset_parser = std::make_unique<VIO::EurocDataProvider>(vio_params);
+    }
+    break;
+    default:
+    {
+      LOG(FATAL) << "Unrecognized Frontend type: "
+                 << VIO::to_underlying(vio_params.frontend_type_)
+                 << ". 0: Mono, 1: Stereo.";
+    }
+    }
+  }
+  break;
+  case 1:
+  {
+    dataset_parser = std::make_unique<VIO::KittiDataProvider>();
+  }
+  break;
+  default:
+  {
+    LOG(FATAL) << "Unrecognized dataset type: " << FLAGS_dataset_type << "."
+               << " 0: EuRoC, 1: Kitti.";
+  }
   }
   CHECK(dataset_parser);
 
   VIO::Pipeline::Ptr vio_pipeline;
 
-  switch (vio_params.frontend_type_) {
-    case VIO::FrontendType::kMonoImu: {
-      vio_pipeline = std::make_unique<VIO::MonoImuPipeline>(vio_params);
-    } break;
-    case VIO::FrontendType::kStereoImu: {
-      vio_pipeline = std::make_unique<VIO::StereoImuPipeline>(vio_params);
-    } break;
-    default: {
-      LOG(FATAL) << "Unrecognized Frontend type: "
-                 << VIO::to_underlying(vio_params.frontend_type_)
-                 << ". 0: Mono, 1: Stereo.";
-    } break;
+  switch (vio_params.frontend_type_)
+  {
+  case VIO::FrontendType::kMonoImu:
+  {
+    vio_pipeline = std::make_unique<VIO::MonoImuPipeline>(vio_params);
+  }
+  break;
+  case VIO::FrontendType::kStereoImu:
+  {
+    vio_pipeline = std::make_unique<VIO::StereoImuPipeline>(vio_params);
+  }
+  break;
+  default:
+  {
+    LOG(FATAL) << "Unrecognized Frontend type: "
+               << VIO::to_underlying(vio_params.frontend_type_)
+               << ". 0: Mono, 1: Stereo.";
+  }
+  break;
   }
 
   // Register callback to shutdown data provider in case VIO pipeline
@@ -107,7 +128,8 @@ int main(int argc, char* argv[]) {
   dataset_parser->registerLeftFrameCallback(std::bind(
       &VIO::Pipeline::fillLeftFrameQueue, vio_pipeline, std::placeholders::_1));
 
-  if (vio_params.frontend_type_ == VIO::FrontendType::kStereoImu) {
+  if (vio_params.frontend_type_ == VIO::FrontendType::kStereoImu)
+  {
     auto stereo_pipeline =
         std::dynamic_pointer_cast<VIO::StereoImuPipeline>(vio_pipeline);
     CHECK(stereo_pipeline);
@@ -121,7 +143,8 @@ int main(int argc, char* argv[]) {
   // Spin dataset.
   auto tic = VIO::utils::Timer::tic();
   bool is_pipeline_successful = false;
-  if (vio_params.parallel_run_) {
+  if (vio_params.parallel_run_)
+  {
     auto handle = std::async(
         std::launch::async, &VIO::DataProviderInterface::spin, dataset_parser);
     auto handle_pipeline =
@@ -130,15 +153,20 @@ int main(int argc, char* argv[]) {
         std::launch::async,
         &VIO::Pipeline::waitForShutdown,
         vio_pipeline,
-        [&dataset_parser]() -> bool { return !dataset_parser->hasData(); },
+        [&dataset_parser]() -> bool
+        { return !dataset_parser->hasData(); },
         500,
         true);
     vio_pipeline->spinViz();
     is_pipeline_successful = !handle.get();
     handle_shutdown.get();
     handle_pipeline.get();
-  } else {
-    while (dataset_parser->spin() && vio_pipeline->spin()) {
+  }
+  else
+  {
+    while (dataset_parser->spin() && vio_pipeline->spin())
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
       continue;
     };
     vio_pipeline->shutdown();
@@ -151,7 +179,8 @@ int main(int argc, char* argv[]) {
   LOG(INFO) << "Pipeline successful? "
             << (is_pipeline_successful ? "Yes!" : "No!");
 
-  if (is_pipeline_successful) {
+  if (is_pipeline_successful)
+  {
     // Log overall time of pipeline run.
     VIO::PipelineLogger logger;
     logger.logPipelineOverallTiming(spin_duration);

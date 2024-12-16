@@ -1,5 +1,5 @@
 #!/bin/bash
---log_output=false
+--log_output=true
 --backend_type=1
 --regular_vio_backend_modality=0
 --deterministic_random_number_generator=true
@@ -10,29 +10,33 @@
 
 # 3D Visualization
 --visualize=true
---visualize_lmk_type=false
+--visualize_lmk_type=true
 --visualize_mesh=true
---visualize_mesh_2d=false
+--texturize_3d_mesh=true
+--visualize_mesh_2d=true
+--visualize_mesh_2d_filtered=true
 --visualize_mesh_with_colored_polygon_clusters=false
---visualize_point_cloud=true
---visualize_convex_hull=false
+--visualize_point_cloud=false
+--visualize_convex_hull=true
 --visualize_plane_constraints=false
 --visualize_planes=false
 --visualize_plane_label=false
---visualize_semantic_mesh=false
---visualize_mesh_in_frustum=false
+--visualize_semantic_mesh=true
+--visualize_mesh_in_frustum=true
+--visualize_follow_camera=true
 #--visualize_load_mesh_filename=/home/tonirv/datasets/euroc/V1_01_easy/mav0/pointcloud0/data.ply
 # Type of 3D Visualization:
 # 0: mesh 3d
 # 1: pointcloud
 # 2: none
---viz_type=1
+--viz_type=0
 --min_num_obs_for_mesher_points=3
 --extract_planes_from_the_scene=false
 
 # For displaying/saving Frontend images:
---visualize_frontend_images=false
---save_frontend_images=false
+--visualize_frontend_images=true
+--save_frontend_images=true
 --log_feature_tracks=false
---log_mono_tracking_images=false
+--log_mono_tracking_images=true
 --log_stereo_matching_images=false
+
